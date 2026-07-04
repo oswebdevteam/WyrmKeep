@@ -1,193 +1,114 @@
-Welcome to your new TanStack Start app! 
+# WyrmKeep
 
-# Getting Started
+WyrmKeep is a memory-augmented smart contract audit console. The frontend is a
+TanStack Start app with Clerk authentication, a dark/blue product landing page,
+and a dashboard for contracts, audits, findings, memory datasets, and settings.
 
-To run this application:
+## Stack
+
+- TanStack Start + TanStack Router
+- React 19
+- TanStack Query, Form, and Table
+- Clerk for identity
+- Tailwind CSS plus scoped CSS for custom visual effects
+- Vite
+- Vitest
+
+## Getting Started
+
+Install dependencies:
 
 ```bash
 pnpm install
+```
+
+Copy the environment template:
+
+```bash
+cp .env.example .env.local
+```
+
+Start the app:
+
+```bash
 pnpm dev
 ```
 
-# Building For Production
+The dev server runs on `http://localhost:3000`.
 
-To build this application for production:
+## Environment
+
+Only `VITE_` variables are exposed to the browser.
+
+```bash
+VITE_API_BASE_URL=http://localhost:8000
+VITE_WYRMKEEP_USE_MOCK=false
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_xxx
+```
+
+`VITE_API_BASE_URL` points to the running WyrmKeep API. If unset, the app
+defaults to `http://localhost:8000`.
+
+`VITE_WYRMKEEP_USE_MOCK` controls backend mode:
+
+- unset or `true`: use the in-memory mock backend
+- `false`: call the live API at `VITE_API_BASE_URL`
+
+`VITE_CLERK_PUBLISHABLE_KEY` enables Clerk. When unset, Clerk is bypassed for
+local development and the auth pages show a dev continue path.
+
+## Authentication Flow
+
+Clerk controls who can enter the application. After sign-up or sign-in, users
+connect a WyrmKeep API credential on `/connect`.
+
+The WyrmKeep API key or session token is what authenticates backend requests.
+Clerk identity and backend API credentials are intentionally separate.
+
+## Useful Commands
+
+```bash
+pnpm dev
+pnpm build
+pnpm preview
+pnpm test
+pnpm generate-routes
+```
+
+## Project Structure
+
+```text
+src/
+  components/              Shared app components
+  integrations/            TanStack Query/devtools integration
+  lib/
+    api/                   API client, mock data, hooks, SSE helpers
+    auth/                  Clerk gate and WyrmKeep credential state
+    dashboard/             Dashboard shell and shared UI primitives
+  routes/                  File-based TanStack Router routes
+  styles.css               Global theme, dashboard, auth, and landing styles
+```
+
+## UI Notes
+
+The public landing/auth pages use a black/blue visual system with custom CSS
+for the glassy planes, angled ribbon, and Clerk overrides. The dashboard shares
+the same blue/neutral brand palette in both light and dark modes.
+
+Tailwind is available and used throughout route/component markup. Scoped CSS is
+kept for shared theme variables, dashboard primitives, Clerk selectors, and the
+more bespoke landing-page effects.
+
+## Production
+
+Build the client and SSR output:
 
 ```bash
 pnpm build
 ```
 
-## Testing
-
-This project uses [Vitest](https://vitest.dev/) for testing. You can run the tests with:
+Preview the production build locally:
 
 ```bash
-pnpm test
+pnpm preview
 ```
-
-## Styling
-
-This project uses [Tailwind CSS](https://tailwindcss.com/) for styling.
-
-### Removing Tailwind CSS
-
-If you prefer not to use Tailwind CSS:
-
-1. Remove the demo pages in `src/routes/demo/`
-2. Replace the Tailwind import in `src/styles.css` with your own styles
-3. Remove `tailwindcss()` from the plugins array in `vite.config.ts`
-4. Uninstall the packages: `pnpm add @tailwindcss/vite tailwindcss --dev`
-
-
-
-## Routing
-
-This project uses [TanStack Router](https://tanstack.com/router) with file-based routing. Routes are managed as files in `src/routes`.
-
-### Adding A Route
-
-To add a new route to your application just add a new file in the `./src/routes` directory.
-
-TanStack will automatically generate the content of the route file for you.
-
-Now that you have two routes you can use a `Link` component to navigate between them.
-
-### Adding Links
-
-To use SPA (Single Page Application) navigation you will need to import the `Link` component from `@tanstack/react-router`.
-
-```tsx
-import { Link } from "@tanstack/react-router";
-```
-
-Then anywhere in your JSX you can use it like so:
-
-```tsx
-<Link to="/about">About</Link>
-```
-
-This will create a link that will navigate to the `/about` route.
-
-More information on the `Link` component can be found in the [Link documentation](https://tanstack.com/router/v1/docs/framework/react/api/router/linkComponent).
-
-### Using A Layout
-
-In the File Based Routing setup the layout is located in `src/routes/__root.tsx`. Anything you add to the root route will appear in all the routes. The route content will appear in the JSX where you render `{children}` in the `shellComponent`.
-
-Here is an example layout that includes a header:
-
-```tsx
-import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
-
-export const Route = createRootRoute({
-  head: () => ({
-    meta: [
-      { charSet: 'utf-8' },
-      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { title: 'My App' },
-    ],
-  }),
-  shellComponent: ({ children }) => (
-    <html lang="en">
-      <head>
-        <HeadContent />
-      </head>
-      <body>
-        <header>
-          <nav>
-            <Link to="/">Home</Link>
-            <Link to="/about">About</Link>
-          </nav>
-        </header>
-        {children}
-        <Scripts />
-      </body>
-    </html>
-  ),
-})
-```
-
-More information on layouts can be found in the [Layouts documentation](https://tanstack.com/router/latest/docs/framework/react/guide/routing-concepts#layouts).
-
-## Server Functions
-
-TanStack Start provides server functions that allow you to write server-side code that seamlessly integrates with your client components.
-
-```tsx
-import { createServerFn } from '@tanstack/react-start'
-
-const getServerTime = createServerFn({
-  method: 'GET',
-}).handler(async () => {
-  return new Date().toISOString()
-})
-
-// Use in a component
-function MyComponent() {
-  const [time, setTime] = useState('')
-  
-  useEffect(() => {
-    getServerTime().then(setTime)
-  }, [])
-  
-  return <div>Server time: {time}</div>
-}
-```
-
-## API Routes
-
-You can create API routes by using the `server` property in your route definitions:
-
-```tsx
-import { createFileRoute } from '@tanstack/react-router'
-import { json } from '@tanstack/react-start'
-
-export const Route = createFileRoute('/api/hello')({
-  server: {
-    handlers: {
-      GET: () => json({ message: 'Hello, World!' }),
-    },
-  },
-})
-```
-
-## Data Fetching
-
-There are multiple ways to fetch data in your application. You can use TanStack Query to fetch data from a server. But you can also use the `loader` functionality built into TanStack Router to load the data for a route before it's rendered.
-
-For example:
-
-```tsx
-import { createFileRoute } from '@tanstack/react-router'
-
-export const Route = createFileRoute('/people')({
-  loader: async () => {
-    const response = await fetch('https://swapi.dev/api/people')
-    return response.json()
-  },
-  component: PeopleComponent,
-})
-
-function PeopleComponent() {
-  const data = Route.useLoaderData()
-  return (
-    <ul>
-      {data.results.map((person) => (
-        <li key={person.name}>{person.name}</li>
-      ))}
-    </ul>
-  )
-}
-```
-
-Loaders simplify your data fetching logic dramatically. Check out more information in the [Loader documentation](https://tanstack.com/router/latest/docs/framework/react/guide/data-loading#loader-parameters).
-
-# Demo files
-
-Files prefixed with `demo` can be safely deleted. They are there to provide a starting point for you to play around with the features you've installed.
-
-# Learn More
-
-You can learn more about all of the offerings from TanStack in the [TanStack documentation](https://tanstack.com).
-
-For TanStack Start specific documentation, visit [TanStack Start](https://tanstack.com/start).
