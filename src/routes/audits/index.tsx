@@ -1,10 +1,8 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import { Info, ScanSearch } from 'lucide-react'
+import { ScanSearch } from 'lucide-react'
 import { useAuth } from '../../lib/auth/auth'
-import { useFindings } from '../../lib/api/hooks'
-import { loadTrackedAudits } from '../../lib/api/audit-store'
-import type { TrackedAudit } from '../../lib/api/audit-store'
+import { useFindings, useAudits } from '../../lib/api/hooks'
 import {
   Badge,
   Card,
@@ -35,21 +33,18 @@ function statusTone(status?: string): 'good' | 'warn' | 'info' | 'neutral' {
 
 function Audits() {
   const { isConnected } = useAuth()
+  const audits = useAudits()
   const findings = useFindings()
   const navigate = useNavigate()
-  const [tracked, setTracked] = useState<Array<TrackedAudit>>([])
-
-  // localStorage is client-only — read after mount to avoid hydration mismatch.
-  useEffect(() => setTracked(loadTrackedAudits()), [])
 
   const rows = useMemo<Array<AuditRow>>(() => {
     const byId = new Map<string, AuditRow>()
-    for (const t of tracked) {
-      byId.set(t.audit_id, {
-        audit_id: t.audit_id,
-        contract_name: t.contract_name,
-        status: t.status,
-        created_at: t.created_at,
+    for (const a of audits.data?.items ?? []) {
+      byId.set(a.id, {
+        audit_id: a.id,
+        contract_name: a.contract_name,
+        status: a.status,
+        created_at: a.created_at,
         finding_count: 0,
         tracked: true,
       })
@@ -69,7 +64,7 @@ function Audits() {
     return [...byId.values()].sort((a, b) =>
       (b.created_at ?? '').localeCompare(a.created_at ?? ''),
     )
-  }, [tracked, findings.data])
+  }, [audits.data, findings.data])
 
   return (
     <>
@@ -77,14 +72,6 @@ function Audits() {
         title="Audits"
         subtitle="Memory-augmented analysis runs. Open one to watch its live pipeline or read the report."
       />
-
-      <div className="mb-4 flex items-start gap-2 rounded-xl border border-[var(--line)] bg-[var(--chip-bg)] p-3 text-xs text-[var(--sea-ink-soft)]">
-        <Info size={15} className="mt-0.5 flex-shrink-0" />
-        <span>
-          The API has no list-audits endpoint. This view merges audits started in
-          this browser with audit IDs seen in findings.
-        </span>
-      </div>
 
       {!isConnected ? (
         <EmptyState title="Not connected" description="Connect a workspace first." />

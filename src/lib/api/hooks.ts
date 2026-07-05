@@ -19,11 +19,11 @@ import {
   getReport,
   listContracts,
   listFindings,
+  listAudits,
   pruneMemory,
   recallMemory,
   uploadContract,
 } from './endpoints'
-import { trackAudit } from './audit-store'
 import type { MemoryScope, Uuid } from './types'
 
 const PAGE_SIZE = 20
@@ -33,6 +33,7 @@ export const queryKeys = {
   me: (t?: string) => ['me', t] as const,
   contracts: (t?: string) => ['contracts', t] as const,
   contract: (t: string | undefined, id: string) => ['contract', t, id] as const,
+  audits: (t?: string) => ['audits', t] as const,
   findings: (t?: string) => ['findings', t] as const,
   chain: (t: string | undefined, id: string) => ['chain', t, id] as const,
   report: (t: string | undefined, id: string) => ['report', t, id] as const,
@@ -104,22 +105,32 @@ export function useUploadContract() {
 }
 
 // --- Audits -----------------------------------------------------------------
+export function useAudits() {
+  const { tenantId, isConnected } = useAuth()
+  return useInfiniteQuery({
+    queryKey: queryKeys.audits(tenantId),
+    queryFn: ({ pageParam }) => listAudits(PAGE_SIZE, pageParam),
+    initialPageParam: null as Uuid | null,
+    getNextPageParam: (last) => (last.has_more ? last.next_cursor : undefined),
+    enabled: isConnected,
+    select: (data) => ({
+      items: data.pages.flatMap((p) => p.data),
+      pages: data.pages,
+    }),
+  })
+}
+
 export function useCreateAudit() {
+  const qc = useQueryClient()
+  const { tenantId } = useAuth()
   return useMutation({
     mutationFn: (v: {
       contract_id: Uuid
       contract_name: string
       vuln_class_tags: Array<string>
     }) => createAudit(v.contract_id, v.vuln_class_tags),
-    onSuccess: (res, vars) => {
-      trackAudit({
-        audit_id: res.audit_id,
-        contract_id: vars.contract_id,
-        contract_name: vars.contract_name,
-        vuln_class_tags: vars.vuln_class_tags,
-        status: res.status,
-        created_at: new Date().toISOString(),
-      })
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.audits(tenantId) })
     },
   })
 }

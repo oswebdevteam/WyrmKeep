@@ -96,6 +96,20 @@ export interface CreateAuditResponse extends Envelope {
   status: string
 }
 
+export interface Audit {
+  id: Uuid
+  contract_id: Uuid
+  contract_name: string
+  status: string
+  created_at: IsoDateTime
+}
+
+export interface AuditListResponse extends Envelope {
+  data: Array<Audit>
+  next_cursor: Uuid | null
+  has_more: boolean
+}
+
 /** The persisted report JSONB. Matches AuditReport in models/audit.rs. */
 export interface AuditReport {
   slither_findings_count: number

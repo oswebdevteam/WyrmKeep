@@ -250,6 +250,31 @@ export const mockApi = {
     return audit.report
   },
 
+  listAudits(limit = 20, after?: string | null) {
+    let items = Array.from(store.audits.values()).map((a) => {
+      const contract = store.contracts.find((c) => c.id === a.contract_id)
+      return {
+        id: a.id,
+        contract_id: a.contract_id,
+        contract_name: contract?.name ?? 'Unknown',
+        status: a.status,
+        created_at: '2026-07-01T09:12:00.000Z', // simplified mock date
+      }
+    })
+    if (after) {
+      const idx = items.findIndex((a) => a.id === after)
+      items = idx >= 0 ? items.slice(idx + 1) : items
+    }
+    const page = items.slice(0, limit)
+    const has_more = items.length > limit
+    return {
+      data: page,
+      next_cursor: page.length ? page[page.length - 1].id : null,
+      has_more,
+      request_id: rid(),
+    }
+  },
+
   listFindings(limit = 20, after?: string | null) {
     let items = store.findings
     if (after) {

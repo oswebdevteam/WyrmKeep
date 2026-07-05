@@ -18,7 +18,6 @@ import { useAuth } from '../../lib/auth/auth'
 import { streamAudit } from '../../lib/api/sse'
 import { useReport } from '../../lib/api/hooks'
 import { queryKeys } from '../../lib/api/hooks'
-import { updateTrackedAuditStatus } from '../../lib/api/audit-store'
 import type { AuditEvent } from '../../lib/api/types'
 import {
   Badge,
@@ -79,11 +78,9 @@ function AuditDetail() {
         setItems((prev) => [...prev, { event, at: Date.now() }])
         if (event.type === 'error') {
           setState('error')
-          updateTrackedAuditStatus(auditId, 'failed')
         }
         if (event.type === 'report_ready') {
           setState('done')
-          updateTrackedAuditStatus(auditId, 'complete')
         }
       },
       onError: () => setState('error'),

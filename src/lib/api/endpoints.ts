@@ -19,8 +19,9 @@ import type {
   RecallResponse,
   TenantResponse,
   Uuid,
+  AuditListResponse,
 } from './types'
-import type { AuditReport, CausalChain } from './types'
+import type { AuditReport, CausalChain, Audit } from './types'
 
 const v1 = (p: string) => `${API_PREFIX}${p}`
 
@@ -32,13 +33,12 @@ async function mock<T>(fn: () => T): Promise<T> {
   }
 }
 
-// --- Health -----------------------------------------------------------------
+
 export function getHealth(): Promise<HealthResponse> {
   if (USE_MOCK) return mock(() => mockApi.health())
   return request<HealthResponse>('GET', '/health', { anonymous: true })
 }
 
-// --- Tenant -----------------------------------------------------------------
 export function getMe(): Promise<TenantResponse> {
   if (USE_MOCK) return mock(() => mockApi.getMe())
   return request<TenantResponse>('GET', v1('/tenants/me'))
@@ -54,7 +54,7 @@ export function createTenant(
   })
 }
 
-// --- Contracts --------------------------------------------------------------
+
 export function listContracts(
   limit = 20,
   after?: Uuid | null,
@@ -83,7 +83,6 @@ export function uploadContract(input: {
   return request<ContractResponse>('POST', v1('/contracts'), { formData: fd })
 }
 
-// --- Audits -----------------------------------------------------------------
 export function createAudit(
   contract_id: Uuid,
   vuln_class_tags: Array<string>,
@@ -94,12 +93,21 @@ export function createAudit(
   })
 }
 
+export function listAudits(
+  limit = 20,
+  after?: Uuid | null,
+): Promise<AuditListResponse> {
+  if (USE_MOCK) return mock(() => mockApi.listAudits(limit, after))
+  return request<AuditListResponse>('GET', v1('/audits'), {
+    query: { limit, after },
+  })
+}
+
 export function getReport(id: Uuid): Promise<AuditReport> {
   if (USE_MOCK) return mock(() => mockApi.getReport(id))
   return request<AuditReport>('GET', v1(`/audits/${id}/report`))
 }
 
-// --- Findings ---------------------------------------------------------------
 export function listFindings(
   limit = 20,
   after?: Uuid | null,
@@ -115,7 +123,6 @@ export function getCausalChain(id: Uuid): Promise<CausalChain> {
   return request<CausalChain>('GET', v1(`/findings/${id}/chain`))
 }
 
-// --- Memory -----------------------------------------------------------------
 export function recallMemory(
   query: string,
   top_k = 5,
@@ -138,4 +145,4 @@ export function getMemoryStats(): Promise<MemoryStatsResponse> {
 }
 
 // Re-exported types used widely by callers.
-export type { Contract, Finding }
+export type { Contract, Finding, Audit }

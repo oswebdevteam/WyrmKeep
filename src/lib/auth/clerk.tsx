@@ -1,13 +1,3 @@
-// Optional Clerk integration — the identity gate that sits IN FRONT of the WyrmKeep
-// API-key connection. Clerk decides *who reaches the app*; the API key (see auth.tsx)
-// decides *what talks to the backend*.
-//
-// Clerk is enabled only when VITE_CLERK_PUBLISHABLE_KEY is set. Without it (mock/dev),
-// every export here is a transparent pass-through so the app runs with no Clerk account.
-//
-// Note: `isClerkEnabled` is a build-time constant, so the conditional early-returns below
-// never toggle between renders — hook order stays stable.
-
 import { Navigate } from '@tanstack/react-router'
 import {
   ClerkProvider,
