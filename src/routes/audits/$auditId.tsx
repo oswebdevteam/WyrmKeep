@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import {
@@ -67,11 +67,11 @@ function AuditDetail() {
   const qc = useQueryClient()
   const [items, setItems] = useState<Array<TimelineItem>>([])
   const [state, setState] = useState<'streaming' | 'done' | 'error'>('streaming')
-  const startedRef = useRef(false)
 
   useEffect(() => {
-    if (!isConnected || startedRef.current) return
-    startedRef.current = true
+    if (!isConnected) return
+    setItems([])
+    setState('streaming')
 
     const stop = streamAudit(auditId, {
       onEvent: (event) => {
@@ -86,12 +86,11 @@ function AuditDetail() {
       onError: () => setState('error'),
       onDone: () => {
         setState((s) => (s === 'error' ? s : 'done'))
-        // Report + findings are now available on the API.
         qc.invalidateQueries({ queryKey: queryKeys.findings(tenantId) })
       },
     })
+
     return stop
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [auditId, isConnected])
 
   const report = useReport(auditId, state === 'done')
